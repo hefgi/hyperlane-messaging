@@ -1,34 +1,47 @@
-import { ethers, AbiCoder } from 'ethers';
-import { getMailboxABI, getMailboxAddress, getDomain } from '../utils/config.ts';
-import { QueryAnswer } from '../models/choice.ts';
-import { log } from 'console';
+import { ethers } from "ethers";
+import { getMailboxABI, getMailboxAddress } from "../utils/config.ts";
+import { QueryAnswer } from "../models/choice.ts";
 
-export async function query(answers: QueryAnswer) {
-    try {
-        const provider = new ethers.JsonRpcProvider(answers.rpc);
-        const contract = new ethers.Contract(getMailboxAddress(answers.origin), getMailboxABI(), provider);
-        // Querying logs for Dispatch events
-        const logs = await provider.getLogs({
-            address: getMailboxAddress(answers.origin),
-            topics: [ethers.id('Dispatch(address,uint32,bytes32,bytes)')],
-            fromBlock: '0x' + (await provider.getBlockNumber() - 2000).toString(16),
-            toBlock: 'latest'
-        });
+export async function query(answers: QueryAnswer): Promise<void> {
+  try {
+    const provider = new ethers.JsonRpcProvider(answers.rpc);
+    const contract = new ethers.Contract(
+      getMailboxAddress(answers.origin),
+      getMailboxABI(),
+      provider
+    );
+    // Querying logs for Dispatch events
+    const logs = await provider.getLogs({
+      address: getMailboxAddress(answers.origin),
+      topics: [ethers.id("Dispatch(address,uint32,bytes32,bytes)")],
+      fromBlock: "0x" + ((await provider.getBlockNumber()) - 2000).toString(16),
+      toBlock: "latest",
+    });
 
-        for (let log of logs) {
-            const topicstest: Array<string> = Array.from(log.topics); // weird fix because of 'Problem with typings' with ethers v6 https://github.com/ethers-io/ethers.js/issues/4029
-            const logtest: { topics: string[]; data: string; } = {topics: topicstest, data: log.data}
-            const result = contract.interface.parseLog(logtest);
+    for (const log of logs) {
+      const { topics, data } = log;
 
-            console.log({
-                sender: result?.args[0],
-                destination: result?.args[1],
-                recipient: result?.args[2],
-                message: result?.args[3]
-            });
+      const result = contract.interface.parseLog({
+        // Need to copy topics as bug with readonly string: https://github.com/ethers-io/ethers.js/issues/4029
+        topics: [...topics],
+        data: data,
+      });
 
-        }
-    } catch (err) {
-        console.error('Error dispatching message:', err);
+      if (!result) {
+        console.error("error parsing log");
+        continue;
+      }
+
+      const [sender, destination, recipient, message] = result.args;
+
+      console.log({
+        sender,
+        destination,
+        recipient,
+        message,
+      });
     }
+  } catch (err) {
+    console.error("Error dispatching message:", err);
+  }
 }
