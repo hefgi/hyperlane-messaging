@@ -25,8 +25,8 @@ Hyperlane-Messaging is a command-line tool that enables users to send and query 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/hefgi/hyperlane-messaging-cli.git
-cd hyperlane-messaging-cli
+git clone https://github.com/hefgi/hyperlane-messaging.git
+cd hyperlane-messaging
 ```
 
 2. Install the required packages:
@@ -43,7 +43,7 @@ chmod u+x ./src/index.ts
 
 The file (CLI) can now be executed directly as if it was a binary.
 ```bash
-./src/index.ts
+npm run start
 ```
 
 4. Optional: Making the Command Available Globally

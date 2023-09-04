@@ -1,5 +1,5 @@
 import { displayHeader } from "./utils/display.ts";
-import { WhatValue, QueryAnswer } from "./models/choice.ts";
+import { WhatValue } from "./models/choice.ts";
 import {
   whatQuestion,
   sendQuestion,
